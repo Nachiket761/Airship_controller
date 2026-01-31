@@ -1,5 +1,6 @@
 ## Project Structure
 
+```text
 uav_control/
 ├── config/       # PID gains and vehicle parameters
 ├── firmware/     # Low-level code for the microcontroller
