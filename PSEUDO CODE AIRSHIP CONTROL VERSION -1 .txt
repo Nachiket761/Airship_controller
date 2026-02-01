@@ -1,0 +1,67 @@
+Assumptions: 
+
+Airship thrust direction ≈ body axis
+
+Control input = yaw/heading control (rudder / differential thrust)
+
+Position and heading are available (GPS + IMU or equivalent)
+
+Motion is slow → quasi-static dynamics
+
+
+FINAL CONTROL ALGORITHM (PSEUDOCODE)
+Constants and Gains
+L_lookahead      // look-ahead distance (meters)
+Kp_heading       // proportional gain for heading
+Kd_heading       // derivative gain for heading
+Kp_crosstrack    // proportional gain for cross-track correction
+dt               // control loop time step
+
+State Variables
+pos = (x, y)           // current position
+theta                 // current heading angle
+omega                 // heading rate (from gyro)
+
+A = (xA, yA)           // start waypoint
+B = (xB, yB)           // target waypoint
+
+Main Control Loop
+while not reached waypoint B:
+
+    // 1. Path direction (fixed)
+    path_vector = B - A
+    path_unit = normalize(path_vector)
+
+    // 2. Vector from start to current position
+    r = pos - A
+
+    // 3. Projection of position onto path
+    s = dot(r, path_unit)
+    proj_point = A + s * path_unit
+
+    // 4. Cross-track error (signed)
+    e_ct = cross(path_unit, r)     // scalar in 2D
+
+    // 5. Virtual target (look-ahead)
+    virtual_target = proj_point + L_lookahead * path_unit
+
+    // 6. Desired heading direction
+    desired_vector = virtual_target - pos
+    theta_ref = atan2(desired_vector.y, desired_vector.x)
+
+    // 7. Heading error
+    e_theta = wrap_angle(theta_ref - theta)
+
+    // 8. Heading control (PD)
+    u_heading = Kp_heading * e_theta - Kd_heading * omega
+
+    // 9. Apply control input
+    apply_heading_control(u_heading)
+
+    // 10. Update state (from sensors)
+    pos   = get_position()
+    theta = get_heading()
+    omega = get_heading_rate()
+
+end while
+
